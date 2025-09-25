@@ -1,0 +1,35 @@
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos de logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos de backup
+*.backup
+*.bak
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Datos de volúmenes locales (si se usan bind mounts)
+data/
+volumes/
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Certificados SSL (si se añaden)
+*.pem
+*.key
+*.crt
