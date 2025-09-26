@@ -1,35 +1,83 @@
-# Variables de entorno
+# Variables de entorno y configuración sensible
 .env
 .env.local
 .env.*.local
 
-# Archivos de logs
-*.log
-logs/
+# Archivos de Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+terraform-*.tfstate*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+*.tfplan
+*.tfplan.*
+# .terraform.lock.hcl debe estar versionado - NO ignorar
+# Solo ignorar copias de backup del lock file
+.terraform.lock.hcl.backup
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
 
-# Archivos temporales
-*.tmp
-*.temp
+# Backend configurations (contienen nombres específicos del usuario)
+backend-*.hcl
 
-# Archivos de backup
+# Archivos de backup y temporales de Terraform
 *.backup
 *.bak
+providers.tf.azure-backup
+providers.tf.backup
+providers-local.tf.temp
+
+# Scripts que pueden contener información sensible
+generate-password.sh
+deploy.sh
+
+# Archivos de logs y temporales
+*.log
+logs/
+*.tmp
+*.temp
 
 # Archivos de sistema
 .DS_Store
 Thumbs.db
 
-# Datos de volúmenes locales (si se usan bind mounts)
+# Datos de volúmenes locales (Docker/bind mounts)
 data/
 volumes/
 
-# Archivos de IDE
+# Archivos de IDE y editores
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# Certificados SSL (si se añaden)
+# Certificados SSL y claves
 *.pem
 *.key
 *.crt
+*.p12
+*.pfx
+
+# Archivos específicos del proyecto que pueden contener datos sensibles
+terraform.tfvars.local
+*.auto.tfvars
+secrets/
+
+# Archivos que SÍ deben estar en el repositorio (para referencia):
+# - .terraform.lock.hcl (lock file de providers)
+# - terraform.tfvars.example (template)
+# - backend-*.hcl.example (templates)
+# - Makefile
+# - *.tf (configuración de Terraform)
+
+# Notas importantes:
+# - Nunca subir archivos *.tfvars reales (contienen contraseñas)
+# - Los archivos backend-*.hcl reales contienen nombres específicos del usuario

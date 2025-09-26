@@ -1,0 +1,12 @@
+# Backend configuration template for development
+# Copy this to backend-dev.hcl and update with your Azure Storage details
+
+storage_account_name = "your-dev-storage-account"    # Nombre único del storage account
+container_name       = "terraform-state-dev"        # Container para estados de dev
+key                  = "dev/terraform.tfstate"      # Path del archivo de estado
+resource_group_name  = "your-tfstate-rg"           # Resource group del storage
+
+# Steps to create the storage account:
+# 1. az group create --name your-tfstate-rg --location "East US"
+# 2. az storage account create --name your-dev-storage-account --resource-group your-tfstate-rg --location "East US" --sku Standard_LRS
+# 3. az storage container create --name terraform-state-dev --account-name your-dev-storage-account

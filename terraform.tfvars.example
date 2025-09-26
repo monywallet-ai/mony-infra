@@ -1,0 +1,27 @@
+# Ejemplo de archivo de variables para Terraform
+# Copia este archivo a terraform.tfvars y completa los valores
+
+# Configuración del proyecto
+project  = "mony-app"
+location = "East US"
+
+# Opcional: nombre personalizado del resource group
+# rg_name = "mi-resource-group-personalizado"
+
+# Configuración de la aplicación web
+app_name = "mony-webapp-unique-name"  # Debe ser único globalmente
+
+# Configuración de App Service
+app_service_sku = "B1"  # B1, B2, B3, S1, S2, S3, P1v2, P2v2, P3v2
+
+# Configuración de PostgreSQL
+postgres_admin_user = "pgadmin"
+postgres_admin_pass = "TuPasswordSegura123!"  # Mínimo 8 caracteres
+postgres_db_name    = "appdb"
+postgres_sku        = "B1ms"
+postgres_storage_mb = 32768  # 32 GB mínimo
+backup_retention_days = 7    # 7-35 días
+
+# Tu IP pública para acceso a PostgreSQL
+# Puedes obtener tu IP en: https://whatismyipaddress.com/
+allowed_ip = "123.34.56.78"
