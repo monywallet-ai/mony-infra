@@ -25,3 +25,6 @@ backup_retention_days = 7    # 7-35 días
 # Tu IP pública para acceso a PostgreSQL
 # Puedes obtener tu IP en: https://whatismyipaddress.com/
 allowed_ip = "123.34.56.78"
+
+SECRET_KEY = "secreto"
+JWT_SECRET_KEY = "secretito"

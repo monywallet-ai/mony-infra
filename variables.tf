@@ -122,3 +122,23 @@ variable "backup_retention_days" {
     error_message = "Los días de retención deben estar entre 7 y 35."
   }
 }
+
+# Security variables
+variable "secret_key" {
+  description = "Secret key for the application"
+  type        = string
+  sensitive   = true
+}
+
+variable "jwt_secret_key" {
+  description = "JWT secret key for authentication"
+  type        = string
+  sensitive   = true
+}
+
+# Storage variables
+variable "storage_container_name" {
+  description = "Name of the storage container for receipts"
+  type        = string
+  default     = "receipts"
+}

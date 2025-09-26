@@ -41,19 +41,36 @@ resource "azurerm_linux_web_app" "app" {
   site_config {
     always_on = var.environment == "prod" ? true : false
     application_stack {
-      python_version = "3.11"
+      python_version = "3.12"
     }
   }
 
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE"         = "0"
     "PYTHON_ENABLE_WORKER_EXTENSIONS"  = "1"
+    
+    # Database
     "DATABASE_URL"                     = "postgresql://${var.postgres_admin_user}:${var.postgres_admin_pass}@${azurerm_postgresql_flexible_server.pg.fqdn}:5432/${var.postgres_db_name}?sslmode=require"
+    
+    # Environment
     "ENVIRONMENT"                      = var.environment
     "DEBUG"                           = var.environment == "dev" ? "true" : "false"
+    
+    # Security - NUEVAS VARIABLES
+    "SECRET_KEY"                       = var.secret_key
+    "JWT_SECRET_KEY"                   = var.jwt_secret_key
+    "ALGORITHM"                        = "HS256"
+    "ACCESS_TOKEN_EXPIRE_MINUTES"      = "30"
+    
+    # Azure Storage - NUEVAS VARIABLES
+    "AZURE_STORAGE_CONNECTION_STRING"  = azurerm_storage_account.storage.primary_connection_string
+    "AZURE_CONTAINER_NAME"             = var.storage_container_name
   }
 
-  depends_on = [azurerm_postgresql_flexible_server_database.db]
+  depends_on = [
+    azurerm_postgresql_flexible_server_database.db,
+    azurerm_storage_container.receipts  # Nueva dependencia
+  ]
 
   tags = local.common_tags
 }
@@ -108,4 +125,32 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "azure_services" {
   server_id        = azurerm_postgresql_flexible_server.pg.id
   start_ip_address = "0.0.0.0"
   end_ip_address   = "0.0.0.0"
+}
+
+# Storage Account for receipts
+resource "azurerm_storage_account" "storage" {
+  name                     = "${substr(replace("${var.project}${local.environment_suffix}st", "-", ""), 0, 24)}"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                = azurerm_resource_group.rg.location
+  account_tier            = "Standard"
+  account_replication_type = var.environment == "prod" ? "GRS" : "LRS"
+  
+  blob_properties {
+    cors_rule {
+      allowed_headers    = ["*"]
+      allowed_methods    = ["GET", "POST", "PUT"]
+      allowed_origins    = ["*"]
+      exposed_headers    = ["*"]
+      max_age_in_seconds = 3600
+    }
+  }
+
+  tags = local.common_tags
+}
+
+# Storage Container for receipts
+resource "azurerm_storage_container" "receipts" {
+  name                 = var.storage_container_name
+  storage_account_name = azurerm_storage_account.storage.name
+  container_access_type = "private"
 }
