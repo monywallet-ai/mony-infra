@@ -9,7 +9,6 @@ locals {
     Project     = var.project
     Environment = var.environment
     ManagedBy   = "Terraform"
-    CreatedDate = formatdate("YYYY-MM-DD", timestamp())
   }
 }
 
@@ -40,8 +39,17 @@ resource "azurerm_linux_web_app" "app" {
 
   site_config {
     always_on = var.environment == "prod" ? true : false
+    app_command_line = "bash startup.sh"
     application_stack {
       python_version = "3.12"
+    }
+  }
+
+  logs {
+    detailed_error_messages = true
+    failed_request_tracing  = false
+    application_logs {
+      file_system_level = "Information"
     }
   }
 
@@ -61,15 +69,30 @@ resource "azurerm_linux_web_app" "app" {
     "JWT_SECRET_KEY"                   = var.jwt_secret_key
     "ALGORITHM"                        = "HS256"
     "ACCESS_TOKEN_EXPIRE_MINUTES"      = "30"
-    
+
+    "OPEN_AI_SECRET_KEY"               = var.openai_secret_key
+    "OPEN_AI_MODEL"                    = var.openai_model
+    "CORS_ORIGINS"                     = var.cors_origins
+
     # Azure Storage - NUEVAS VARIABLES
     "AZURE_STORAGE_CONNECTION_STRING"  = azurerm_storage_account.storage.primary_connection_string
     "AZURE_CONTAINER_NAME"             = var.storage_container_name
+
+    # Redis Configuration
+    "REDIS_HOST"                       = azurerm_container_group.redis.fqdn
+    "REDIS_PORT"                       = "6379"
+    "REDIS_PASSWORD"                   = var.redis_password
+    "REDIS_DB"                         = "0"
+
+    "ENABLE_DOCS_AUTH"                  = "true"
+    "DOCS_USERNAME"                     = var.docs_username
+    "DOCS_PASSWORD"                     = var.docs_password
   }
 
   depends_on = [
     azurerm_postgresql_flexible_server_database.db,
-    azurerm_storage_container.receipts  # Nueva dependencia
+    azurerm_storage_container.receipts,
+    azurerm_container_group.redis
   ]
 
   tags = local.common_tags
@@ -98,6 +121,11 @@ resource "azurerm_postgresql_flexible_server" "pg" {
   }
 
   public_network_access_enabled = true
+
+  # Ignorar cambios en zona para evitar errores
+  lifecycle {
+    ignore_changes = [zone]
+  }
 
   tags = merge(local.common_tags, {
     Tier = "Database"
@@ -153,4 +181,55 @@ resource "azurerm_storage_container" "receipts" {
   name                 = var.storage_container_name
   storage_account_name = azurerm_storage_account.storage.name
   container_access_type = "private"
+}
+
+# Storage Share for Redis persistence
+resource "azurerm_storage_share" "redis_data" {
+  name                 = "redis-data"
+  storage_account_name = azurerm_storage_account.storage.name
+  quota                = 1
+}
+
+# Container Group for Redis
+resource "azurerm_container_group" "redis" {
+  name                = "${var.project}${local.environment_suffix}-redis"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  ip_address_type     = "Public"
+  dns_name_label      = "${var.project}${local.environment_suffix}-redis"
+  os_type             = "Linux"
+  restart_policy      = "Always"
+
+  container {
+    name   = "redis"
+    image  = "redis:7-alpine"
+    cpu    = var.redis_cpu
+    memory = var.redis_memory
+
+    ports {
+      port     = 6379
+      protocol = "TCP"
+    }
+
+    commands = [
+      "redis-server",
+      "--requirepass", var.redis_password,
+      "--appendonly", "yes",
+      "--dir", "/data"
+    ]
+
+    volume {
+      name                 = "redis-storage"
+      mount_path           = "/data"
+      storage_account_name = azurerm_storage_account.storage.name
+      storage_account_key  = azurerm_storage_account.storage.primary_access_key
+      share_name          = azurerm_storage_share.redis_data.name
+    }
+
+    environment_variables = {
+      "REDIS_PASSWORD" = var.redis_password
+    }
+  }
+
+  tags = local.common_tags
 }

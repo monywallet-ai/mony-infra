@@ -142,3 +142,63 @@ variable "storage_container_name" {
   type        = string
   default     = "receipts"
 }
+
+# Storage variables
+variable "openai_secret_key" {
+  description = "OpenAI secret key"
+  type        = string
+  sensitive   = true
+}
+
+variable "openai_model" {
+  description = "OpenAI model"
+  type        = string
+  default     = "gpt-4o-mini"
+}
+
+variable "cors_origins" {
+  description = "CORS origins"
+  type        = string
+  default     = "*"
+}
+# Documentation access variables
+variable "docs_username" {
+  description = "Username for accessing the documentation"
+  type        = string
+  default     = "admin"
+}
+
+variable "docs_password" {
+  description = "Password for accessing the documentation"
+  type        = string
+  default     = "admin"
+}
+
+# Redis variables
+variable "redis_password" {
+  description = "Redis password for authentication"
+  type        = string
+  sensitive   = true
+}
+
+variable "redis_memory" {
+  description = "Redis container memory in GB"
+  type        = number
+  default     = 0.5
+  
+  validation {
+    condition     = var.redis_memory >= 0.5 && var.redis_memory <= 2
+    error_message = "Redis memory debe estar entre 0.5 y 2 GB."
+  }
+}
+
+variable "redis_cpu" {
+  description = "Redis container CPU cores"
+  type        = number
+  default     = 0.1
+  
+  validation {
+    condition     = var.redis_cpu >= 0.1 && var.redis_cpu <= 1
+    error_message = "Redis CPU debe estar entre 0.1 y 1 core."
+  }
+}

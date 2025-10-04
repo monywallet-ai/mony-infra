@@ -43,3 +43,13 @@ output "storage_account_name" {
   description = "The name of the storage account"
   value       = azurerm_storage_account.storage.name
 }
+
+output "redis_host" {
+  description = "Redis container FQDN"
+  value       = azurerm_container_group.redis.fqdn
+}
+
+output "redis_ip" {
+  description = "Redis container IP address"
+  value       = azurerm_container_group.redis.ip_address
+}
